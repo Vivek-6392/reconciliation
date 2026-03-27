@@ -1,0 +1,172 @@
+{
+  "period": "2025-03",
+  "version": "2.0",
+  "totals": {
+    "transaction_count": 54,
+    "transaction_amount": 132905.43,
+    "settlement_count": 52,
+    "settlement_amount": 131975.45,
+    "net_difference": 929.98
+  },
+  "gaps": {
+    "next_month_settlements": [
+      {
+        "transaction_id": "TXN-0046",
+        "txn_date": "2025-03-31",
+        "txn_amount": 847.5,
+        "settlement_id": "SETT-0046",
+        "settlement_date": "2025-04-01",
+        "settlement_month": "2025-04",
+        "impact": "Excluded from March settlement total"
+      }
+    ],
+    "rounding_differences": [
+      {
+        "transaction_id": "TXN-0047",
+        "platform_amount": 199.995,
+        "bank_amount": 199.99,
+        "difference": 0.005,
+        "direction": "truncated",
+        "settlement_id": "SETT-0047"
+      },
+      {
+        "transaction_id": "TXN-0048",
+        "platform_amount": 299.995,
+        "bank_amount": 299.99,
+        "difference": 0.005,
+        "direction": "truncated",
+        "settlement_id": "SETT-0048"
+      },
+      {
+        "transaction_id": "TXN-0049",
+        "platform_amount": 149.995,
+        "bank_amount": 149.99,
+        "difference": 0.005,
+        "direction": "truncated",
+        "settlement_id": "SETT-0049"
+      },
+      {
+        "transaction_id": "TXN-0050",
+        "platform_amount": 399.995,
+        "bank_amount": 399.99,
+        "difference": 0.005,
+        "direction": "truncated",
+        "settlement_id": "SETT-0050"
+      },
+      {
+        "transaction_id": "TXN-0051",
+        "platform_amount": 99.995,
+        "bank_amount": 99.99,
+        "difference": 0.005,
+        "direction": "truncated",
+        "settlement_id": "SETT-0051"
+      },
+      {
+        "transaction_id": "TXN-0052",
+        "platform_amount": 249.995,
+        "bank_amount": 249.99,
+        "difference": 0.005,
+        "direction": "truncated",
+        "settlement_id": "SETT-0052"
+      }
+    ],
+    "duplicate_settlements": [
+      {
+        "transaction_id": "TXN-0012",
+        "occurrence_count": 2,
+        "settlement_ids": [
+          "SETT-0012",
+          "SETT-0053"
+        ],
+        "batch_ids": [
+          "BATCH-223",
+          "BATCH-392"
+        ],
+        "amounts": [
+          4239.0,
+          4239.0
+        ],
+        "expected_amount": 4239.0,
+        "total_settled": 8478.0,
+        "overcharge": 4239.0,
+        "severity": "HIGH"
+      }
+    ],
+    "orphan_refunds": [
+      {
+        "transaction_id": "REF-9001",
+        "amount": -214.0,
+        "txn_date": "2025-03-15",
+        "customer_id": "CUST-7734",
+        "has_settlement": false,
+        "issue": "No bank acknowledgment of reversal"
+      }
+    ],
+    "ghost_settlements": [
+      {
+        "settlement_id": "SETT-9999",
+        "transaction_id": "TXN-GHOST",
+        "settled_amount": 3200.0,
+        "settlement_date": "2025-03-20",
+        "batch_id": "BATCH-999",
+        "issue": "Settlement exists in bank file but transaction not found on platform",
+        "risk": "Possible phantom payout or data ingestion failure"
+      }
+    ],
+    "late_settlements": [
+      {
+        "transaction_id": "TXN-0005",
+        "txn_date": "2025-03-12",
+        "settlement_date": "2025-03-20",
+        "settlement_id": "SETT-0005",
+        "business_days": 6,
+        "sla_days": 3,
+        "days_over_sla": 3,
+        "amount": 2531.72
+      }
+    ],
+    "partial_settlements": [
+      {
+        "transaction_id": "TXN-0008",
+        "platform_amount": 3796.45,
+        "bank_amount": 3500.0,
+        "shortfall": 296.45,
+        "settlement_id": "SETT-0008",
+        "possible_cause": "Partial capture, fee deduction, or chargeback"
+      }
+    ],
+    "velocity_anomalies": [
+      {
+        "transaction_id": "TXN-0099",
+        "customer_id": "CUST-3504",
+        "txn_amount": 14500.0,
+        "customer_avg": 3677.83,
+        "multiplier": 3.9,
+        "txn_date": "2025-03-28",
+        "flag": "3.9\u00d7 customer average \u2014 manual review recommended"
+      }
+    ]
+  },
+  "summary": {
+    "total_gaps_found": 13,
+    "gap_counts": {
+      "next_month_settlements": 1,
+      "rounding_differences": 6,
+      "duplicate_settlements": 1,
+      "orphan_refunds": 1,
+      "ghost_settlements": 1,
+      "late_settlements": 1,
+      "partial_settlements": 1,
+      "velocity_anomalies": 1
+    },
+    "financial_impact": {
+      "next_month_missing": 847.5,
+      "rounding_total_delta": 0.03,
+      "duplicate_overcharge": 4239.0,
+      "partial_shortfall": 296.45,
+      "ghost_settlement_risk": 3200.0
+    },
+    "sla_breach_count": 1,
+    "fraud_flag_count": 1
+  }
+}

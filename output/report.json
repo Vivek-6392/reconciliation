@@ -1,0 +1,100 @@
+{
+  "period": "2025-03",
+  "totals": {
+    "transaction_count": 53,
+    "transaction_amount": 118405.43,
+    "settlement_count": 51,
+    "settlement_amount": 117771.9,
+    "net_difference": 633.53
+  },
+  "gaps": {
+    "next_month_settlements": [
+      {
+        "transaction_id": "TXN-0046",
+        "txn_date": "2025-03-31",
+        "txn_amount": 847.5,
+        "settlement_date": "2025-04-01",
+        "settlement_id": "SETT-0046",
+        "impact": "Excluded from March settlement total"
+      }
+    ],
+    "rounding_differences": [
+      {
+        "transaction_id": "TXN-0047",
+        "platform_amount": 199.995,
+        "bank_amount": 199.99,
+        "difference": 0.005,
+        "settlement_id": "SETT-0047"
+      },
+      {
+        "transaction_id": "TXN-0048",
+        "platform_amount": 299.995,
+        "bank_amount": 299.99,
+        "difference": 0.005,
+        "settlement_id": "SETT-0048"
+      },
+      {
+        "transaction_id": "TXN-0049",
+        "platform_amount": 149.995,
+        "bank_amount": 149.99,
+        "difference": 0.005,
+        "settlement_id": "SETT-0049"
+      },
+      {
+        "transaction_id": "TXN-0050",
+        "platform_amount": 399.995,
+        "bank_amount": 399.99,
+        "difference": 0.005,
+        "settlement_id": "SETT-0050"
+      },
+      {
+        "transaction_id": "TXN-0051",
+        "platform_amount": 99.995,
+        "bank_amount": 99.99,
+        "difference": 0.005,
+        "settlement_id": "SETT-0051"
+      },
+      {
+        "transaction_id": "TXN-0052",
+        "platform_amount": 249.995,
+        "bank_amount": 249.99,
+        "difference": 0.005,
+        "settlement_id": "SETT-0052"
+      }
+    ],
+    "duplicate_settlements": [
+      {
+        "transaction_id": "TXN-0012",
+        "occurrence_count": 2,
+        "settlement_ids": [
+          "SETT-0012",
+          "SETT-0053"
+        ],
+        "amounts": [
+          4239.0,
+          4239.0
+        ],
+        "total_settled": 8478.0,
+        "expected": 4239.0,
+        "overcharge": 4239.0
+      }
+    ],
+    "orphan_refunds": [
+      {
+        "transaction_id": "REF-9001",
+        "amount": -214.0,
+        "txn_date": "2025-03-15",
+        "customer_id": "CUST-7734",
+        "has_settlement": false,
+        "issue": "No corresponding settlement found"
+      }
+    ]
+  },
+  "summary": {
+    "total_gaps_found": 9,
+    "next_month_amount_missing": 847.5,
+    "rounding_total_delta": 0.03,
+    "duplicate_overcharge": 4239.0,
+    "orphan_refund_count": 1
+  }
+}

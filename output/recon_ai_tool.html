@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReconAI — Live Reconciliation Analyst</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;
+connect-src *;">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,700;12..96,800&display=swap"
+    rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg: #0a0a09;
+      --surface: #111110;
+      --surface2: #1a1a18;
+      --border: #2a2a27;
+      --border2: #3a3a36;
+      --ink: #f0ede8;
+      --ink2: #a09d98;
+      --ink3: #6a6762;
+      --accent: #e8d5a0;
+      --accent2: #c4a96a;
+      --red: #e05050;
+      --red-dim: #3a1a1a;
+      --amber: #d4913a;
+      --amber-dim: #2e2010;
+      --green: #5ab870;
+      --green-dim: #102010;
+      --blue: #5a9fd4;
+      --blue-dim: #0a1e30;
+      --purple: #a07ad4;
+      --purple-dim: #1a1030;
+    }
+
+    body {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      overflow-x: hidden
+    }
+
+    /* ── HEADER ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 32px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .logo-mark {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 800;
+      color: #0a0a09;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em
+    }
+
+    .logo-sub {
+      font-size: 11px;
+      color: var(--ink3);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 2px
+    }
+
+    .header-badge {
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent2);
+      border: 1px solid var(--accent2);
+      padding: 4px 10px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── LAYOUT ── */
+    .app {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      height: calc(100vh - 61px)
+    }
+
+    /* ── LEFT PANEL ── */
+    .left {
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+    }
+
+    .section {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink3);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border)
+    }
+
+    /* tab bar */
+    .tabs {
+      display: flex;
+      gap: 2px;
+      background: var(--bg);
+      border-radius: 6px;
+      padding: 3px;
+      margin-bottom: 16px
+    }
+
+    .tab {
+      flex: 1;
+      padding: 6px 0;
+      font-size: 12px;
+      font-weight: 500;
+      text-align: center;
+      border-radius: 4px;
+      cursor: pointer;
+      color: var(--ink3);
+      border: none;
+      background: none;
+      transition: all .15s;
+      font-family: 'Bricolage Grotesque', sans-serif;
+    }
+
+    .tab.active {
+      background: var(--surface2);
+      color: var(--ink);
+      border: 1px solid var(--border2)
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--ink);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      padding: 12px;
+      resize: none;
+      transition: border .15s;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: var(--border2)
+    }
+
+    textarea::placeholder {
+      color: var(--ink3)
+    }
+
+    .file-drop {
+      border: 1.5px dashed var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .file-drop:hover,
+    .file-drop.drag {
+      border-color: var(--accent2);
+      background: rgba(196, 169, 106, .05)
+    }
+
+    .file-drop-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+      opacity: 0.5
+    }
+
+    .file-drop p {
+      font-size: 12px;
+      color: var(--ink3);
+      line-height: 1.6
+    }
+
+    .file-drop strong {
+      color: var(--accent2)
+    }
+
+    /* period input */
+    .period-row {
+      display: flex;
+      gap: 8px;
+      align-items: center
+    }
+
+    .period-row label {
+      font-size: 12px;
+      color: var(--ink2);
+      white-space: nowrap
+    }
+
+    input[type=text] {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--ink);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      padding: 7px 10px;
+      outline: none;
+      transition: border .15s;
+    }
+
+    input[type=text]:focus {
+      border-color: var(--border2)
+    }
+
+    /* analyse button */
+    .btn-analyse {
+      width: 100%;
+      padding: 13px;
+      background: var(--accent);
+      color: #0a0a09;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .15s;
+      font-family: 'Bricolage Grotesque', sans-serif;
+      letter-spacing: -0.01em;
+    }
+
+    .btn-analyse:hover {
+      background: var(--accent2)
+    }
+
+    .btn-analyse:disabled {
+      opacity: 0.4;
+      cursor: not-allowed
+    }
+
+    .btn-demo {
+      width: 100%;
+      padding: 9px;
+      background: transparent;
+      color: var(--ink2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+      font-family: 'Bricolage Grotesque', sans-serif;
+      margin-top: 8px;
+    }
+
+    .btn-demo:hover {
+      border-color: var(--border2);
+      color: var(--ink)
+    }
+
+    /* status bar */
+    .status-bar {
+      margin-top: 12px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-bar.show {
+      display: flex
+    }
+
+    .status-bar.loading {
+      background: var(--amber-dim);
+      color: var(--amber)
+    }
+
+    .status-bar.done {
+      background: var(--green-dim);
+      color: var(--green)
+    }
+
+    .status-bar.error {
+      background: var(--red-dim);
+      color: var(--red)
+    }
+
+    .pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 1s infinite
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .3
+      }
+    }
+
+    /* ── RIGHT PANEL ── */
+    .right {
+      overflow-y: auto;
+      padding: 28px 32px
+    }
+
+    .empty-state {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink3);
+      text-align: center;
+      gap: 16px;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      opacity: 0.3
+    }
+
+    .empty-state h2 {
+      font-size: 20px;
+      color: var(--ink2);
+      font-weight: 500
+    }
+
+    .empty-state p {
+      font-size: 13px;
+      max-width: 320px;
+      line-height: 1.7
+    }
+
+    /* result header */
+    .result-header {
+      margin-bottom: 24px
+    }
+
+    .result-title {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 4px
+    }
+
+    .result-meta {
+      font-size: 12px;
+      color: var(--ink3);
+      font-family: 'JetBrains Mono', monospace
+    }
+
+    /* metrics grid */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 24px
+    }
+
+    .metric {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+
+    .metric-label {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink3);
+      margin-bottom: 8px
+    }
+
+    .metric-value {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      font-family: 'JetBrains Mono', monospace
+    }
+
+    .metric-value.red {
+      color: var(--red)
+    }
+
+    .metric-value.amber {
+      color: var(--amber)
+    }
+
+    .metric-sub {
+      font-size: 10px;
+      color: var(--ink3);
+      margin-top: 4px;
+      font-family: 'JetBrains Mono', monospace
+    }
+
+    /* analysis output */
+    .analysis-output {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .analysis-output h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink2);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .ai-badge {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      padding: 2px 7px;
+      background: rgba(232, 213, 160, .12);
+      color: var(--accent2);
+      border: 1px solid rgba(196, 169, 106, .3);
+      border-radius: 3px;
+      text-transform: uppercase;
+    }
+
+    .analysis-content {
+      font-size: 13px;
+      line-height: 1.8;
+      color: var(--ink2);
+      white-space: pre-wrap
+    }
+
+    .analysis-content strong {
+      color: var(--ink);
+      font-weight: 600
+    }
+
+    /* gap cards */
+    .gap-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px
+    }
+
+    .gap-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      cursor: pointer;
+      transition: border .15s;
+    }
+
+    .gap-card:hover {
+      border-color: var(--border2)
+    }
+
+    .gap-card.expanded {
+      border-color: var(--border2)
+    }
+
+    .gap-header {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .gap-sev {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .sev-critical {
+      background: var(--red)
+    }
+
+    .sev-high {
+      background: var(--amber)
+    }
+
+    .sev-medium {
+      background: var(--blue)
+    }
+
+    .sev-low {
+      background: var(--ink3)
+    }
+
+    .gap-name {
+      font-size: 13px;
+      font-weight: 600;
+      flex: 1
+    }
+
+    .gap-count {
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .cnt-red {
+      background: var(--red-dim);
+      color: var(--red)
+    }
+
+    .cnt-amber {
+      background: var(--amber-dim);
+      color: var(--amber)
+    }
+
+    .cnt-blue {
+      background: var(--blue-dim);
+      color: var(--blue)
+    }
+
+    .cnt-gray {
+      background: var(--surface2);
+      color: var(--ink3)
+    }
+
+    .gap-chevron {
+      color: var(--ink3);
+      font-size: 12px;
+      transition: transform .2s
+    }
+
+    .gap-card.expanded .gap-chevron {
+      transform: rotate(90deg)
+    }
+
+    .gap-detail {
+      display: none;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    .gap-card.expanded .gap-detail {
+      display: block
+    }
+
+    /* mini table */
+    .mini-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace
+    }
+
+    .mini-table th {
+      text-align: left;
+      padding: 6px 10px;
+      color: var(--ink3);
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 500;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+    }
+
+    .mini-table td {
+      padding: 7px 10px;
+      border: 1px solid var(--border);
+      color: var(--ink2);
+      vertical-align: top
+    }
+
+    .mini-table tr:nth-child(even) td {
+      background: rgba(255, 255, 255, .02)
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em
+    }
+
+    .tag-red {
+      background: var(--red-dim);
+      color: var(--red)
+    }
+
+    .tag-amber {
+      background: var(--amber-dim);
+      color: var(--amber)
+    }
+
+    .tag-green {
+      background: var(--green-dim);
+      color: var(--green)
+    }
+
+    .tag-gray {
+      background: var(--surface2);
+      color: var(--ink3)
+    }
+
+    /* streaming cursor */
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 14px;
+      background: var(--accent);
+      animation: blink .8s infinite;
+      vertical-align: middle;
+      margin-left: 2px
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="header">
+    <div class="logo">
+      <div class="logo-mark">R</div>
+      <div>
+        <div class="logo-text">ReconAI</div>
+        <div class="logo-sub">Live Reconciliation Analyst</div>
+      </div>
+    </div>
+    <div class="header-badge">Powered by AI · 8 Gap Types</div>
+  </header>
+
+  <div class="app">
+    <!-- LEFT PANEL -->
+    <div class="left">
+      <div class="section">
+        <div class="section-title">Transactions</div>
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab('txn','paste')">Paste CSV</button>
+          <button class="tab" onclick="switchTab('txn','upload')">Upload File</button>
+        </div>
+        <div id="txn-paste">
+          <textarea id="txn-csv" rows="8"
+            placeholder="transaction_id,customer_id,amount,currency,timestamp,status&#10;TXN-0001,CUST-001,250.00,USD,2025-03-05 10:22:00,completed&#10;..."></textarea>
+        </div>
+        <div id="txn-upload" style="display:none">
+          <div class="file-drop" id="txn-drop" onclick="document.getElementById('txn-file').click()"
+            ondragover="dragOver(event,'txn-drop')" ondragleave="dragLeave('txn-drop')"
+            ondrop="dropFile(event,'txn-csv','txn-drop')">
+            <div class="file-drop-icon">📄</div>
+            <p><strong>Click to upload</strong> or drag & drop<br>transactions.csv</p>
+          </div>
+          <input type="file" id="txn-file" accept=".csv" style="display:none" onchange="loadFile(this,'txn-csv')">
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Settlements</div>
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab('sett','paste')">Paste CSV</button>
+          <button class="tab" onclick="switchTab('sett','upload')">Upload File</button>
+        </div>
+        <div id="sett-paste">
+          <textarea id="sett-csv" rows="8"
+            placeholder="settlement_id,transaction_id,settled_amount,currency,settlement_date,batch_id&#10;SETT-0001,TXN-0001,250.00,USD,2025-03-06,BATCH-101&#10;..."></textarea>
+        </div>
+        <div id="sett-upload" style="display:none">
+          <div class="file-drop" id="sett-drop" onclick="document.getElementById('sett-file').click()"
+            ondragover="dragOver(event,'sett-drop')" ondragleave="dragLeave('sett-drop')"
+            ondrop="dropFile(event,'sett-csv','sett-drop')">
+            <div class="file-drop-icon">🏦</div>
+            <p><strong>Click to upload</strong> or drag & drop<br>settlements.csv</p>
+          </div>
+          <input type="file" id="sett-file" accept=".csv" style="display:none" onchange="loadFile(this,'sett-csv')">
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Settings</div>
+        <div class="period-row" style="margin-bottom:10px">
+          <label>Period (YYYY-MM)</label>
+          <input type="text" id="period" value="2025-03" maxlength="7">
+        </div>
+        <div style="margin-top:8px">
+          <label style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink3);display:block;margin-bottom:6px">Groq API Key</label>
+          <div style="position:relative">
+            <input type="password" id="groq-api-key" placeholder="gsk_••••••••••••••••••••••"
+              style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:11px;padding:8px 36px 8px 10px;outline:none;transition:border .15s;"
+              onfocus="this.style.borderColor='var(--border2)'" onblur="this.style.borderColor='var(--border)'">
+            <button onclick="toggleKeyVisibility()" id="eye-btn" title="Show/hide key" style="
+              position:absolute;right:8px;top:50%;transform:translateY(-50%);
+              background:none;border:none;cursor:pointer;color:var(--ink3);
+              font-size:13px;padding:0;line-height:1;
+            ">👁</button>
+          </div>
+          <div style="font-size:10px;color:var(--ink3);margin-top:5px;font-family:'JetBrains Mono',monospace">
+            Stored in memory only — never sent anywhere except your local server.
+          </div>
+        </div>
+      </div>
+
+      <div class="section" style="border-bottom:none;flex:1">
+        <button class="btn-analyse" id="btn-run" onclick="runAnalysis()">
+          ⚡ Analyse with AI
+        </button>
+        <button class="btn-demo" onclick="loadDemo()">
+          Load Demo Data (8 gap types)
+        </button>
+        <div class="status-bar" id="status-bar">
+          <div class="pulse"></div>
+          <span id="status-text">Analysing...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right" id="right-panel">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">⚖️</div>
+        <h2>Nothing to reconcile yet</h2>
+        <p>Paste your transactions and settlements CSVs, then hit Analyse. Or load the demo data to see all 8 gap types
+          detected live.</p>
+      </div>
+      <div id="results" style="display:none"></div>
+    </div>
+  </div>
+
+  <script>
+    // ── Demo data (all 8 gap types planted) ────────────────────────────────────
+    const DEMO_TXN = `transaction_id,customer_id,amount,currency,timestamp,status
+TXN-0001,CUST-5506,134.8,USD,2025-03-06 09:42:36,completed
+TXN-0002,CUST-2679,1123.82,USD,2025-03-12 21:19:10,completed
+TXN-0003,CUST-7912,443.82,USD,2025-03-27 11:23:53,completed
+TXN-0004,CUST-4582,158.69,USD,2025-03-02 13:01:46,completed
+TXN-0005,CUST-1434,2531.72,USD,2025-03-12 07:04:10,completed
+TXN-0006,CUST-9928,1002.2,USD,2025-03-28 05:53:52,completed
+TXN-0007,CUST-5557,1110.0,USD,2025-03-21 08:46:33,completed
+TXN-0008,CUST-3615,3796.45,USD,2025-03-01 07:34:17,completed
+TXN-0009,CUST-3547,1707.85,USD,2025-03-21 12:22:53,completed
+TXN-0010,CUST-6514,4786.49,USD,2025-03-11 10:51:31,completed
+TXN-0011,CUST-2584,472.8,USD,2025-03-05 23:05:00,completed
+TXN-0012,CUST-5333,4239.0,USD,2025-03-18 10:14:28,completed
+TXN-0013,CUST-9785,3651.36,USD,2025-03-03 02:37:24,completed
+TXN-0014,CUST-7201,4865.85,USD,2025-03-07 01:25:58,completed
+TXN-0015,CUST-6925,2764.68,USD,2025-03-04 19:48:31,completed
+TXN-0016,CUST-2139,969.52,USD,2025-03-29 00:39:50,completed
+TXN-0017,CUST-5741,3309.7,USD,2025-03-03 05:23:21,completed
+TXN-0018,CUST-2654,4278.04,USD,2025-03-04 20:57:51,completed
+TXN-0019,CUST-6977,1397.09,USD,2025-03-19 10:52:44,completed
+TXN-0020,CUST-4432,1857.2,USD,2025-03-08 21:30:20,completed
+TXN-0034,CUST-3504,4306.9,USD,2025-03-03 06:53:40,completed
+TXN-0045,CUST-3504,3048.76,USD,2025-03-25 15:28:12,completed
+TXN-0046,CUST-5501,847.5,USD,2025-03-31 23:14:07,completed
+REF-9001,CUST-7734,-214.0,USD,2025-03-15 10:22:33,refunded
+TXN-0047,CUST-7126,199.995,USD,2025-03-08 20:13:05,completed
+TXN-0048,CUST-9837,299.995,USD,2025-03-26 17:54:24,completed
+TXN-0049,CUST-1009,149.995,USD,2025-03-16 17:40:09,completed
+TXN-0050,CUST-9005,399.995,USD,2025-03-01 22:41:31,completed
+TXN-0051,CUST-2832,99.995,USD,2025-03-18 14:54:11,completed
+TXN-0052,CUST-6038,249.995,USD,2025-03-12 14:58:55,completed
+TXN-0099,CUST-3504,14500.0,USD,2025-03-28 14:30:00,completed`;
+
+    const DEMO_SETT = `settlement_id,transaction_id,settled_amount,currency,settlement_date,batch_id
+SETT-0001,TXN-0001,134.8,USD,2025-03-07,BATCH-346
+SETT-0002,TXN-0002,1123.82,USD,2025-03-13,BATCH-187
+SETT-0003,TXN-0003,443.82,USD,2025-03-29,BATCH-935
+SETT-0004,TXN-0004,158.69,USD,2025-03-03,BATCH-878
+SETT-0005,TXN-0005,2531.72,USD,2025-03-20,BATCH-231
+SETT-0006,TXN-0006,1002.2,USD,2025-03-30,BATCH-662
+SETT-0007,TXN-0007,1110.0,USD,2025-03-22,BATCH-371
+SETT-0008,TXN-0008,3500.0,USD,2025-03-03,BATCH-316
+SETT-0009,TXN-0009,1707.85,USD,2025-03-22,BATCH-830
+SETT-0010,TXN-0010,4786.49,USD,2025-03-13,BATCH-508
+SETT-0011,TXN-0011,472.8,USD,2025-03-07,BATCH-548
+SETT-0012,TXN-0012,4239.0,USD,2025-03-20,BATCH-223
+SETT-0013,TXN-0013,3651.36,USD,2025-03-04,BATCH-330
+SETT-0014,TXN-0014,4865.85,USD,2025-03-08,BATCH-446
+SETT-0015,TXN-0015,2764.68,USD,2025-03-05,BATCH-702
+SETT-0016,TXN-0016,969.52,USD,2025-03-30,BATCH-702
+SETT-0017,TXN-0017,3309.7,USD,2025-03-04,BATCH-107
+SETT-0018,TXN-0018,4278.04,USD,2025-03-05,BATCH-824
+SETT-0019,TXN-0019,1397.09,USD,2025-03-20,BATCH-334
+SETT-0020,TXN-0020,1857.2,USD,2025-03-09,BATCH-132
+SETT-0034,TXN-0034,4306.9,USD,2025-03-05,BATCH-845
+SETT-0045,TXN-0045,3048.76,USD,2025-03-26,BATCH-270
+SETT-0046,TXN-0046,847.5,USD,2025-04-01,BATCH-516
+SETT-0047,TXN-0047,199.99,USD,2025-03-10,BATCH-592
+SETT-0048,TXN-0048,299.99,USD,2025-03-27,BATCH-985
+SETT-0049,TXN-0049,149.99,USD,2025-03-18,BATCH-160
+SETT-0050,TXN-0050,399.99,USD,2025-03-02,BATCH-488
+SETT-0051,TXN-0051,99.99,USD,2025-03-19,BATCH-499
+SETT-0052,TXN-0052,249.99,USD,2025-03-14,BATCH-902
+SETT-0053,TXN-0012,4239.0,USD,2025-03-20,BATCH-392
+SETT-9999,TXN-GHOST,3200.0,USD,2025-03-20,BATCH-999
+SETT-0099,TXN-0099,14500.0,USD,2025-03-30,BATCH-777`;
+
+    // ── CSV parser ───────────────────────────────────────────────────────────────
+    function parseCSV(text) {
+      const lines = text.trim().split('\n').map(l => l.trim()).filter(Boolean);
+      if (!lines.length) return [];
+      const headers = lines[0].split(',').map(h => h.trim());
+      return lines.slice(1).map(line => {
+        const vals = line.split(',').map(v => v.trim());
+        return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? '']));
+      });
+    }
+
+    // ── Built-in reconciliation (runs client-side first) ─────────────────────────
+    function reconcileLocally(txns, setts, period) {
+      const inPeriod = (d) => String(d).slice(0, 7) === period;
+      const marchTxns = txns.filter(t => inPeriod(t.timestamp?.slice(0, 7)));
+      const txnById = Object.fromEntries(txns.map(t => [t.transaction_id, t]));
+
+      const settByTxn = {};
+      for (const s of setts) {
+        const tid = s.transaction_id;
+        if (!settByTxn[tid]) settByTxn[tid] = [];
+        settByTxn[tid].push(s);
+      }
+      const allSettPrimary = {};
+      const marchSettPrimary = {};
+      for (const [tid, rows] of Object.entries(settByTxn)) {
+        allSettPrimary[tid] = rows[0];
+        const mr = rows.filter(r => inPeriod(r.settlement_date?.slice(0, 7)));
+        if (mr.length) marchSettPrimary[tid] = mr[0];
+      }
+
+      // customer avg for velocity
+      const custAmts = {};
+      for (const t of txns) {
+        const a = parseFloat(t.amount);
+        if (a > 0) { if (!custAmts[t.customer_id]) custAmts[t.customer_id] = []; custAmts[t.customer_id].push(a); }
+      }
+
+      // SLA helper
+      function bizDays(d1, d2) {
+        let s = new Date(d1), e = new Date(d2), n = 0;
+        while (s < e) { s.setDate(s.getDate() + 1); if (s.getDay() > 0 && s.getDay() < 6) n++; }
+        return n;
+      }
+
+      const gaps = { next_month: [], rounding: [], duplicate: [], orphan: [], ghost: [], late: [], partial: [], velocity: [] };
+
+      for (const txn of marchTxns) {
+        const tid = txn.transaction_id;
+        const amt = parseFloat(txn.amount);
+        const sett = allSettPrimary[tid];
+        const marchSett = marchSettPrimary[tid];
+        const isRefund = tid.startsWith('REF-') || amt < 0;
+
+        // GAP 1
+        if (sett && !inPeriod(sett.settlement_date?.slice(0, 7)))
+          gaps.next_month.push({ id: tid, txn_date: txn.timestamp?.slice(0, 10), amount: amt, settled: sett.settlement_date });
+
+        // GAP 2
+        if (marchSett) {
+          const d = amt - parseFloat(marchSett.settled_amount);
+          if (Math.abs(d) > 0 && Math.abs(d) < 1)
+            gaps.rounding.push({ id: tid, platform: amt, bank: parseFloat(marchSett.settled_amount), diff: Math.round(d * 1e6) / 1e6 });
+        }
+
+        // GAP 4
+        if (isRefund && !allSettPrimary[tid])
+          gaps.orphan.push({ id: tid, amount: amt, date: txn.timestamp?.slice(0, 10), customer: txn.customer_id });
+
+        // GAP 6
+        if (sett && !isRefund) {
+          const bd = bizDays(txn.timestamp?.slice(0, 10), sett.settlement_date);
+          if (bd > 3) gaps.late.push({ id: tid, txn_date: txn.timestamp?.slice(0, 10), sett_date: sett.settlement_date, biz_days: bd, over: bd - 3 });
+        }
+
+        // GAP 7
+        if (marchSett && !isRefund) {
+          const shortfall = amt - parseFloat(marchSett.settled_amount);
+          if (shortfall > 1) gaps.partial.push({ id: tid, platform: amt, bank: parseFloat(marchSett.settled_amount), shortfall: Math.round(shortfall * 100) / 100 });
+        }
+
+        // GAP 8
+        if (!isRefund) {
+          const hist = (custAmts[txn.customer_id] || []);
+          const others = hist.filter(a => a !== amt);
+          if (others.length >= 1) {
+            const avg = others.reduce((a, b) => a + b, 0) / others.length;
+            if (avg > 0 && amt >= 500 && amt > 3 * avg)
+              gaps.velocity.push({ id: tid, customer: txn.customer_id, amount: amt, avg: Math.round(avg * 100) / 100, mult: Math.round(amt / avg * 10) / 10 });
+          }
+        }
+      }
+
+      // GAP 3
+      for (const [tid, rows] of Object.entries(settByTxn)) {
+        if (rows.length > 1) {
+          const total = rows.reduce((a, r) => a + parseFloat(r.settled_amount), 0);
+          gaps.duplicate.push({ id: tid, count: rows.length, total: Math.round(total * 100) / 100, expected: parseFloat(rows[0].settled_amount), overcharge: Math.round((total - parseFloat(rows[0].settled_amount)) * 100) / 100 });
+        }
+      }
+
+      // GAP 5
+      for (const [tid, sett] of Object.entries(allSettPrimary)) {
+        if (!txnById[tid])
+          gaps.ghost.push({ id: tid, sett_id: sett.settlement_id, amount: parseFloat(sett.settled_amount), date: sett.settlement_date });
+      }
+
+      const totalTxn = marchTxns.reduce((a, t) => a + parseFloat(t.amount), 0);
+      const marchSettAmt = Object.entries(marchSettPrimary)
+        .filter(([tid]) => marchTxns.find(t => t.transaction_id === tid))
+        .reduce((a, [, s]) => a + parseFloat(s.settled_amount), 0);
+
+      return {
+        period, txn_count: marchTxns.length,
+        txn_amount: Math.round(totalTxn * 100) / 100,
+        sett_amount: Math.round(marchSettAmt * 100) / 100,
+        net_diff: Math.round((totalTxn - marchSettAmt) * 100) / 100,
+        gaps
+      };
+    }
+
+    // ── UI helpers ───────────────────────────────────────────────────────────────
+    function toggleKeyVisibility() {
+      const input = document.getElementById('groq-api-key');
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    function switchTab(panel, mode) {
+      const paste = document.getElementById(`${panel}-paste`);
+      const upload = document.getElementById(`${panel}-upload`);
+      const tabs = (paste.closest('.section') || upload.closest('.section')).querySelectorAll('.tab');
+      tabs.forEach(t => t.classList.remove('active'));
+      if (mode === 'paste') { paste.style.display = ''; upload.style.display = 'none'; tabs[0].classList.add('active'); }
+      else { paste.style.display = 'none'; upload.style.display = ''; tabs[1].classList.add('active'); }
+    }
+function loadFile(input, targetId) {
+  const f = input.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    document.getElementById(targetId).value = e.target.result;
+
+    // Show success message on the drop zone
+    const panel = targetId === 'txn-csv' ? 'txn' : 'sett';
+    const drop = document.getElementById(`${panel}-drop`);
+    if (drop) {
+      drop.innerHTML = `
+        <div class="file-drop-icon">✅</div>
+        <p><strong style="color:var(--green)">${f.name}</strong> loaded<br>
+        <span style="color:var(--ink3);font-size:11px">${e.target.result.trim().split('\n').length - 1} rows found</span></p>
+      `;
+    }
+  };
+  r.readAsText(f);
+}
+    function dragOver(e, id) { e.preventDefault(); document.getElementById(id).classList.add('drag'); }
+    function dragLeave(id) { document.getElementById(id).classList.remove('drag'); }
+function dropFile(e, targetId, dropId) {
+  e.preventDefault(); dragLeave(dropId);
+  const f = e.dataTransfer.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    document.getElementById(targetId).value = ev.target.result;
+
+    const drop = document.getElementById(dropId);
+    if (drop) {
+      drop.innerHTML = `
+        <div class="file-drop-icon">✅</div>
+        <p><strong style="color:var(--green)">${f.name}</strong> loaded<br>
+        <span style="color:var(--ink3);font-size:11px">${ev.target.result.trim().split('\n').length - 1} rows found</span></p>
+      `;
+    }
+  };
+  r.readAsText(f);
+}
+    function loadDemo() {
+      document.getElementById('txn-csv').value = DEMO_TXN;
+      document.getElementById('sett-csv').value = DEMO_SETT;
+      setStatus('loading', 'Demo data loaded — click Analyse to run');
+      setTimeout(() => { document.getElementById('status-bar').classList.remove('show'); }, 2000);
+    }
+
+    function setStatus(type, text) {
+      const bar = document.getElementById('status-bar');
+      bar.className = `status-bar show ${type}`;
+      document.getElementById('status-text').textContent = text;
+    }
+
+    // ── Format helpers ────────────────────────────────────────────────────────────
+    const fmt = n => '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    const GAP_META = {
+      next_month: { label: 'Next-month settlement', sev: 'high', color: 'cnt-amber', dot: 'sev-high' },
+      rounding: { label: 'Rounding differences', sev: 'medium', color: 'cnt-blue', dot: 'sev-medium' },
+      duplicate: { label: 'Duplicate settlements', sev: 'critical', color: 'cnt-red', dot: 'sev-critical' },
+      orphan: { label: 'Orphan refunds', sev: 'high', color: 'cnt-amber', dot: 'sev-high' },
+      ghost: { label: 'Ghost settlements', sev: 'critical', color: 'cnt-red', dot: 'sev-critical' },
+      late: { label: 'Late settlements (SLA)', sev: 'medium', color: 'cnt-blue', dot: 'sev-medium' },
+      partial: { label: 'Partial settlements', sev: 'high', color: 'cnt-amber', dot: 'sev-high' },
+      velocity: { label: 'Velocity anomalies', sev: 'high', color: 'cnt-amber', dot: 'sev-high' },
+    };
+
+    function gapTable(type, items) {
+      if (!items.length) return '<p style="font-size:12px;color:var(--ink3);padding:8px 0">No issues detected.</p>';
+      const cols = {
+        next_month: ['Transaction', 'Txn Date', 'Amount', 'Settlement Date'],
+        rounding: ['Transaction', 'Platform', 'Bank', 'Difference'],
+        duplicate: ['Transaction', 'Count', 'Total Settled', 'Overcharge'],
+        orphan: ['Transaction', 'Customer', 'Amount', 'Date'],
+        ghost: ['Settlement ID', 'Txn ID Referenced', 'Amount', 'Date'],
+        late: ['Transaction', 'Txn Date', 'Settled', 'Biz Days', 'Over SLA'],
+        partial: ['Transaction', 'Platform', 'Bank', 'Shortfall'],
+        velocity: ['Transaction', 'Customer', 'Amount', 'Avg', 'Multiplier'],
+      };
+      const rows = {
+        next_month: i => `<td>${i.id}</td><td>${i.txn_date}</td><td>${fmt(i.amount)}</td><td><span class="tag tag-red">${i.settled}</span></td>`,
+        rounding: i => `<td>${i.id}</td><td>${fmt(i.platform)}</td><td>${fmt(i.bank)}</td><td><span class="tag tag-amber">${fmt(i.diff)}</span></td>`,
+        duplicate: i => `<td>${i.id}</td><td><span class="tag tag-red">${i.count}×</span></td><td>${fmt(i.total)}</td><td><span class="tag tag-red">${fmt(i.overcharge)}</span></td>`,
+        orphan: i => `<td>${i.id}</td><td>${i.customer}</td><td><span class="tag tag-red">${fmt(i.amount)}</span></td><td>${i.date}</td>`,
+        ghost: i => `<td>${i.sett_id}</td><td><span class="tag tag-red">${i.id}</span></td><td>${fmt(i.amount)}</td><td>${i.date}</td>`,
+        late: i => `<td>${i.id}</td><td>${i.txn_date}</td><td>${i.sett_date}</td><td>${i.biz_days}d</td><td><span class="tag tag-amber">+${i.over}d</span></td>`,
+        partial: i => `<td>${i.id}</td><td>${fmt(i.platform)}</td><td>${fmt(i.bank)}</td><td><span class="tag tag-amber">${fmt(i.shortfall)}</span></td>`,
+        velocity: i => `<td>${i.id}</td><td>${i.customer}</td><td>${fmt(i.amount)}</td><td>${fmt(i.avg)}</td><td><span class="tag tag-red">${i.mult}×</span></td>`,
+      };
+      const ths = cols[type].map(c => `<th>${c}</th>`).join('');
+      const trs = items.map(i => `<tr>${rows[type](i)}</tr>`).join('');
+      return `<table class="mini-table"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
+    }
+
+    function renderResults(local, aiText) {
+      const totalGaps = Object.values(local.gaps).reduce((a, g) => a + g.length, 0);
+      const atRisk = (local.gaps.duplicate || []).reduce((a, g) => a + g.overcharge, 0)
+        + (local.gaps.ghost || []).reduce((a, g) => a + g.amount, 0)
+        + Math.abs(local.net_diff);
+
+      let html = `
+    <div class="result-header">
+      <div class="result-title">Reconciliation — ${local.period}</div>
+      <div class="result-meta">Analysed ${local.txn_count} transactions · ${new Date().toISOString().slice(0, 19).replace('T', ' ')} UTC</div>
+    </div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Transactions</div><div class="metric-value">${local.txn_count}</div><div class="metric-sub">${fmt(local.txn_amount)} recorded</div></div>
+      <div class="metric"><div class="metric-label">Net difference</div><div class="metric-value ${Math.abs(local.net_diff) > 0 ? 'red' : ''}">${fmt(local.net_diff)}</div><div class="metric-sub">${local.net_diff === 0 ? '✓ balanced' : 'books don\'t balance'}</div></div>
+      <div class="metric"><div class="metric-label">Total gaps</div><div class="metric-value ${totalGaps > 0 ? 'amber' : ''}">${totalGaps}</div><div class="metric-sub">across 8 gap types</div></div>
+      <div class="metric"><div class="metric-label">At-risk amount</div><div class="metric-value ${atRisk > 0 ? 'red' : ''}">${fmt(atRisk)}</div><div class="metric-sub">requires action</div></div>
+    </div>`;
+
+      // AI analysis section
+      html += `
+    <div class="analysis-output">
+      <h3><span class="ai-badge">AI</span> AI Analysis</h3>
+      <div class="analysis-content" id="ai-content">${aiText || '<span class="cursor"></span>'}</div>
+    </div>`;
+
+      // Gap cards
+      html += '<div class="section-title" style="margin-bottom:12px">Gap breakdown</div>';
+      html += '<div class="gap-cards">';
+      for (const [key, meta] of Object.entries(GAP_META)) {
+        const items = local.gaps[key] || [];
+        const expanded = items.length > 0 ? ' expanded' : '';
+        html += `
+      <div class="gap-card${expanded}" onclick="toggleCard(this)">
+        <div class="gap-header">
+          <div class="gap-sev ${meta.dot}"></div>
+          <div class="gap-name">${meta.label}</div>
+          <div class="gap-count ${items.length > 0 ? meta.color : 'cnt-gray'}">${items.length} found</div>
+          <div class="gap-chevron">${items.length > 0 ? '▶' : '▶'}</div>
+        </div>
+        <div class="gap-detail">${gapTable(key, items)}</div>
+      </div>`;
+      }
+      html += '</div>';
+      document.getElementById('results').innerHTML = html;
+    }
+
+    function toggleCard(el) { el.classList.toggle('expanded'); }
+
+    // ── Main analysis ─────────────────────────────────────────────────────────────
+    async function runAnalysis() {
+      const txnRaw = document.getElementById('txn-csv').value.trim();
+      const settRaw = document.getElementById('sett-csv').value.trim();
+      const period = document.getElementById('period').value.trim();
+      const apiKey = document.getElementById('groq-api-key').value.trim();
+      if (!txnRaw || !settRaw) { setStatus('error', 'Please paste or upload both CSV files'); return; }
+      if (!apiKey) { setStatus('error', 'Please enter your Groq API key in Settings'); return; }
+
+      const txns = parseCSV(txnRaw);
+      const setts = parseCSV(settRaw);
+      if (!txns.length || !setts.length) { setStatus('error', 'Could not parse CSVs — check format'); return; }
+
+      setStatus('loading', 'Running reconciliation engine...');
+      document.getElementById('btn-run').disabled = true;
+      document.getElementById('empty-state').style.display = 'none';
+      document.getElementById('results').style.display = 'block';
+
+      // Run local engine immediately to show structure
+      const local = reconcileLocally(txns, setts, period);
+      renderResults(local, '');
+
+      setStatus('loading', 'Streaming AI analysis...');
+
+      // Build prompt
+      const gapSummary = Object.entries(local.gaps)
+        .filter(([, v]) => v.length > 0)
+        .map(([k, v]) => `- ${GAP_META[k].label}: ${v.length} instance(s)`)
+        .join('\n');
+
+      const totalGaps = Object.values(local.gaps).reduce((a, g) => a + g.length, 0);
+      const atRisk = (local.gaps.duplicate || []).reduce((a, g) => a + g.overcharge, 0)
+        + (local.gaps.ghost || []).reduce((a, g) => a + g.amount, 0)
+        + Math.abs(local.net_diff);
+
+      const prompt = `You are a senior payments reconciliation analyst. I've run automated reconciliation on a payments platform for ${period} and found the following gaps:
+
+SUMMARY:
+- Transactions: ${local.txn_count} totalling ${fmt(local.txn_amount)}
+- Net difference (platform vs bank): ${fmt(local.net_diff)}
+- Total gaps found: ${totalGaps}
+- Total at-risk amount: ${fmt(atRisk)}
+
+GAP BREAKDOWN:
+${gapSummary}
+
+RAW GAP DATA (JSON):
+${JSON.stringify(local.gaps, null, 2).slice(0, 3000)}
+
+Write a concise analyst report (3-4 paragraphs) covering:
+1. Executive summary of the overall reconciliation health
+2. Which gaps pose the highest financial risk and why
+3. Root causes and how each gap type typically arises in payment systems
+4. Concrete recommended actions, prioritised by urgency
+
+Be specific with amounts. Use a professional but direct tone. No bullet points — write in paragraphs.`;
+
+      try {
+        const res = await fetch('http://localhost:5000/api/analyse', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, apiKey })
+        });
+
+        const data = await res.json();
+
+        // Extract Claude response
+        console.log("Full API response:", JSON.stringify(data));
+
+        let aiText = "No response";
+        if (data?.content && Array.isArray(data.content)) {
+          aiText = data.content.map(c => c.text || "").join("");
+        } else if (data?.error) {
+          aiText = `API Error: ${data.error.message || JSON.stringify(data.error)}`;
+        } else {
+          aiText = "Unexpected response: " + JSON.stringify(data).slice(0, 200);
+        }
+
+        document.getElementById('ai-content').textContent = aiText;
+
+        setStatus('done', `Analysis complete · ${totalGaps} gaps found`);
+      } catch (err) {
+        const el = document.getElementById('ai-content');
+        el.textContent = `[API unavailable in this environment — reconciliation data above is fully computed client-side. All ${totalGaps} gaps detected algorithmically without AI.\n\nError: ${err.message}]`;
+        setStatus('error', 'API call failed — results still shown below');
+      }
+
+      document.getElementById('btn-run').disabled = false;
+    }
+  </script>
+</body>
+
+</html>
