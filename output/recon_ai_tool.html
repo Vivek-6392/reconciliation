@@ -1207,7 +1207,7 @@ Write a concise analyst report (3-4 paragraphs) covering:
 Be specific with amounts. Use a professional but direct tone. No bullet points — write in paragraphs.`;
 
       try {
-        const res = await fetch('http://localhost:5000/api/analyse', {
+        const res = await fetch('https://reconciliation-production.up.railway.app/api/analyse', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt, apiKey })
