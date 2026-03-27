@@ -4,7 +4,9 @@ const cors = require("cors");
 const Groq = require("groq-sdk");
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: '*' // you can restrict to your Vercel URL later
+}));
 app.use(express.json());
 
 app.post("/api/analyse", async (req, res) => {
